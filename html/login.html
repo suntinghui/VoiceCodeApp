@@ -33,7 +33,7 @@
 			<div style="color: #9B9B9B; padding: 10px; font-size:.9rem;">
 				<div id="proDiv" class="mui-input-row mui-checkbox mui-left" style="display:none;">
 					<input name="proInput" value="agreement" type="checkbox">
-					<label style="width:100%; font-size: 14px; color: #666666;">登录则表示您同意并遵守<a id="abc">《用户协议》</a></label>
+					<label style="width:100%; font-size: 14px; color: #666666;">登录则表示您同意并遵守<a id="agreementDetail">《用户协议》</a></label>
 				</div>
 
 				<a style=" float:right;" id="problem" href="javascript:void(0)">登录遇到问题？</a>
@@ -77,7 +77,7 @@
 			var codeNum = document.getElementById('codeNum');
 			var getCodeBtn = document.getElementById('getCodeBtn');
 			var loginBtn = document.getElementById('loginBtn');
-			var abc = document.getElementById("abc");
+			var agreementDetail = document.getElementById("agreementDetail");
 
 			getCodeBtn.addEventListener('tap', function() {
 				codeNum.value = '';
@@ -101,7 +101,7 @@
 				requestLogin();
 			}, false);
 
-			abc.addEventListener('tap', function() {
+			agreementDetail.addEventListener('tap', function() {
 				mui.openWindow({
 					url: 'http://feng-edu.com/agreement.html',
 					id: Math.random() + "",
