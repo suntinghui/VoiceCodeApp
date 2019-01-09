@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" href="../css/mui.min.css" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+
+		<style>
+			.mui-content {
+				display: flex;
+				align-items: center;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<h1 id="title" class="mui-title">语音密码ORIDENS</h1>
+			<a id="setting" class="mui-icon mui-icon iconfont icon-yonghu mui-pull-right"></a>
+		</header>
+
+		<div id="contentDiv" class="mui-content mui-content-padded">
+			<div class="mui-row mui-text-center margin-top">
+				<div class="mui-col-sm-6">
+					<img id="learn_en_img" src="../img/img-choose-EN.png" width="90%" />
+					<div class="mui-row" style="margin-top: 20px;">
+						<div class="mui-col-sm-6"><button id="learn_en" type="button" class="mui-btn mui-btn-danger learn-btn spec-font">LEARN</button></div>
+						<div class="mui-col-sm-6"><button id="quiz_en" type="button" class="mui-btn mui-btn-danger learn-btn spec-font">QUIZ</button></div>
+					</div>
+				</div>
+
+				<div class="mui-col-sm-6">
+					<img id="learn_cn_img" src="../img/img-choose-CN.png" width="90%">
+					<div class="mui-row" style="margin-top: 20px;">
+						<div class="mui-col-sm-6"><button id="learn_cn" type="button" class="mui-btn mui-btn-danger learn-btn spec-font">学习</button></div>
+						<div class="mui-col-sm-6"><button id="quiz_cn" type="button" class="mui-btn mui-btn-danger learn-btn spec-font">测试</button></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript" src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			var learn_en_img = document.getElementById('learn_en_img');
+			var learn_cn_img = document.getElementById('learn_cn_img');
+			var learn_en = document.getElementById('learn_en');
+			var quiz_en = document.getElementById('quiz_en');
+			var learn_cn = document.getElementById('learn_cn');
+			var quiz_cn = document.getElementById('quiz_cn');
+			
+			if (mui.os.ipad) {
+				document.getElementById('contentDiv').style.height = '100%';
+			}
+
+			window.onload = function() {
+				loadTheme();
+
+				// 加载新的首页图片
+				loadHomeImg();
+
+				mui.plusReady(function() {
+					var lang = plus.os.language;
+					console.log('language:' + lang);
+				})
+
+				queryUserInfo(false);
+			};
+
+			learn_en_img.addEventListener('tap', function() {
+				learnClass('en');
+			}, false);
+
+			learn_en.addEventListener('tap', function() {
+				learnClass('en');
+			}, false);
+
+			quiz_en.addEventListener('tap', function() {
+				quizClass('en');
+			}, false);
+
+			learn_cn_img.addEventListener('tap', function() {
+				learnClass('cn');
+			}, false);
+
+			learn_cn.addEventListener('tap', function() {
+				learnClass('cn');
+			}, false);
+
+			quiz_cn.addEventListener('tap', function() {
+				quizClass('cn');
+			}, false);
+
+			function loadHomeImg() {
+				var enDeleteFileName = 'VoiceCode/sellang/en.png';
+				var cnDeleteFileName = 'VoiceCode/sellang/cn.png';
+
+				var enFileName = getSelLanguageImgDict() + 'en.png';
+				var cnFileName = getSelLanguageImgDict() + 'cn.png';
+
+				deleteFile(enDeleteFileName, function() {
+					downloadCourseImgAction((getHost() + '/en.png'), enFileName, function() {
+						learn_en_img.src = getImgAbsolute(enFileName);
+					}, function(e) {
+						console.log("--" + e.message);
+					});
+				}, function() {
+					downloadCourseImgAction((getHost() + '/en.png'), enFileName, function() {
+						learn_en_img.src = getImgAbsolute(enFileName);
+					}, function(e) {
+						console.log("--" + e.message);
+					});
+				});
+
+				deleteFile(cnDeleteFileName, function() {
+					downloadCourseImgAction((getHost() + '/cn.png'), cnFileName, function() {
+						learn_cn_img.src = getImgAbsolute(cnFileName);
+					}, function(e) {
+						console.log("--" + e.message);
+					});
+				}, function() {
+					downloadCourseImgAction((getHost() + '/cn.png'), cnFileName, function() {
+						learn_cn_img.src = getImgAbsolute(cnFileName);
+					}, function(e) {
+						console.log("--" + e.message);
+					});
+				});
+			}
+
+			// languageType[cn中文 en英文]
+			function learnClass(languageType) {
+				mui.openWindow({
+					url: 'downloadCourse.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					},
+					extras: {
+						languageType: languageType
+					}
+				});
+			}
+
+			function quizClass(languageType) {
+				mui.openWindow({
+					url: 'selectQuiz.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					},
+					extras: {
+						languageType: languageType
+					}
+				});
+			}
+
+			document.getElementById('setting').addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'setting.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+		</script>
+
+		<script>
+			// 再按一次退出应用
+			if(mui.os.android) {
+				var first = null;
+				mui.back = function() {
+					//首次按键，提示‘再按一次退出应用’
+					if(!first) {
+						first = new Date().getTime();
+						mui.toast('再按一次退出应用');
+						setTimeout(function() {
+							first = null;
+						}, 1000);
+					} else {
+						if(new Date().getTime() - first < 1000) {
+							plus.runtime.quit();
+						}
+					}
+				};
+			}
+		</script>
+
+	</body>
+
+</html>

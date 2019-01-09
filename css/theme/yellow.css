@@ -1,0 +1,19 @@
+.mui-bar {
+background: #F5A623;
+color: #fff;
+}
+.mui-btn-danger{
+color: #fff;
+border: 1px solid #F5A623;
+background-color: #F5A623;
+}
+.mui-segmented-control-negative .mui-control-item.mui-active{
+color: #fff;
+background-color: #F5A623;
+}
+.mui-segmented-control-negative .mui-control-item{
+color:#F5A623;
+}
+.mui-segmented-control-negative{
+border: 1px solid #F5A623;
+}

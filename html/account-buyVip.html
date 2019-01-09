@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>购买会员</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+
+	</head>
+
+	<body>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">购买会员</h1>
+		</header>
+
+		<div class="mui-content">
+			<p class="padding" style="margin-bottom: 0;">成为VIP会员可以学习我们所有的精品课程</p>
+			<p class="padding" style="margin-bottom: 0;">已有激活码？
+				<a id="whoami">什么是激活码?</a>
+			</p>
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<label>激活码</label>
+					<input id="activationCode" type="text" class="mui-input-clear" placeholder="请输入激活码，不区分大小写">
+				</div>
+			</form>
+			<div class="padding">
+				<button id="activationBtn" type="button" class="mui-btn mui-btn-danger mui-btn-block">确认</button>
+			</div>
+			<p class="padding" style="margin-bottom: 0;">还没有激活码？</p>
+			<div class="mui-row mui-text-center" style="padding-bottom: 20px;">
+				<div class="mui-col-sm-4">
+					<div class="list-buyVip">
+						<i class="iconfont icon-VIP" style="font-size:3rem; color: #F5A623;"></i>
+						<h4 class="padding-top">VIP会员一年</h4>
+						<h4>398元</h4>
+						<button type="button" class="mui-btn mui-btn-success mui-btn-block">购买</button>
+					</div>
+				</div>
+				<div class="mui-col-sm-4">
+					<div class="list-buyVip">
+						<i class="iconfont icon-VIP" style="font-size:3rem; color: #F5A623;"></i>
+						<h4 class="padding-top">VIP会员两年</h4>
+						<h4>698元</h4>
+						<button type="button" class="mui-btn mui-btn-success mui-btn-block">购买</button>
+					</div>
+				</div>
+				<div class="mui-col-sm-4">
+					<div class="list-buyVip">
+						<i class="iconfont icon-VIP" style="font-size:3rem; color: #F5A623;"></i>
+						<h4 class="padding-top">VIP会员三年</h4>
+						<h4>998元</h4>
+						<button type="button" class="mui-btn mui-btn-success mui-btn-block">购买</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<script type="text/javascript">
+			mui.init();
+
+			window.onload = function() {
+				loadTheme();
+			};
+
+			var whoami = document.getElementById('whoami');
+			var activationCode = document.getElementById('activationCode');
+			var activationBtn = document.getElementById('activationBtn');
+
+			whoami.addEventListener('tap', function() {
+				mui.alert('激活码是一串8位长度的随机数，是《语音密码ORIDENS》向特定人群分发的密钥，使用激活码可以获得我们的VIP权限，学习我们所有的课程。如果您手中已有激活码，可以在下方输入并点击确认进行验证。如果您还没有激活码可以在下方直接进行购买。', '激活码', '知道了');
+			}, false);
+
+			activationBtn.addEventListener('tap', function() {
+				if(activationCode.value.length == 0) {
+					mui.toast('请输入激活码');
+					return;
+				}
+
+				requestActivation();
+				
+			}, false);
+
+			function requestActivation() {
+				mui.plusReady(function() {
+					showProgressDialog("正在提交数据...");
+
+					var arg = {
+						machineCode: plus.device.uuid,
+						phone: storageGetItem(kUserName),
+						activationCode: activationCode.value.toUpperCase()
+					}
+
+					var url = getHost() + "/VoiceCodeService.asmx/DoBindActivationCode";
+					console.log(url);
+
+					mui.ajax(url, {
+						dataType: 'json',
+						data: JSON.stringify(arg),
+						type: 'post',
+						timeout: TIMEOUT,
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						success: function(data) {
+							hideProgressDialog();
+
+							responseActivation(data.d);
+						},
+						error: function(xhr, type, errorThrown) {
+							hideProgressDialog();
+
+							mui.toast(getHttpErrorDesp(type));
+						}
+					});
+				});
+			}
+
+			function responseActivation(resp) {
+				mui.plusReady(function() {
+					if(resp.respCode == '00') {
+						mui.alert('尊敬的用户，恭喜您成为我们的VIP会员。您已经拥有权限使用我们所有的精品课程，祝您学有所成。', '激活成功', '知道了', function() {
+							mui.fire(plus.webview.currentWebview().opener(), 'refreshUserInfo');
+							plus.webview.currentWebview().close();
+						});
+					} else {
+						activationCode.value = '';
+						mui.alert(resp.respMsg);
+					}
+				})
+			}
+		</script>
+
+	</body>
+
+</html>

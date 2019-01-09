@@ -1,0 +1,399 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.min.css" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+
+		<style>
+			.show-class-big {
+				display: -webkit-box;
+				-webkit-box-pack: center;
+				-webkit-box-align: center;
+			}
+			
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">学习课程</h1>
+		</header>
+
+		<div class="mui-content" id="mui-content">
+			<div class="mui-row">
+				<div class="mui-col-sm-3 padding-top" id="role-item">
+
+					<div id="roleDiv" class="mui-row mui-text-center">
+					</div>
+
+				</div>
+
+				<div class="mui-col-sm-6 padding">
+					<div id="show-img" class="show-class-big mui-text-center">
+						<table width="80%" align="center">
+							<tr>
+								<td valign="middle"><img id="currentWord" src="" width="100%"></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+
+				<div class="mui-col-sm-3" id="img-item">
+					<div class="mui-scroll-wrapper chart-box">
+						<div class="mui-scroll" style="height: 95%;">
+							<div id="wordDiv" class="mui-row">
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</body>
+
+	<script type="text/javascript" src="../js/mui.min.js"></script>
+	<script type="text/javascript" src="../js/constants.js"></script>
+	<script type="text/javascript" src="../js/file.js"></script>
+	<script type="text/javascript" src="../js/util.js"></script>
+	<script type="text/javascript" src="../js/view.js"></script>
+	<script type="text/javascript" src="../js/voicecode.js"></script>
+
+	<script type="text/javascript">
+		var role_img = new Array('role_01.png', 'role_02.png', 'role_03.png', 'role_04.png', 'role_05.png', 'role_06.png', 'loop.png', 'random.png');
+
+		var languageType = 'cn'; // 语言类型 languageType[cn中文 en英文]
+		var courseTitle = '';
+		var courseId; // 课程ID
+		var words; // 所有的单词
+		var player;
+
+		// 当前人员数字
+		var peopleNum = -1;
+		// 当前字母数字
+		var wordNum = -1;
+
+		var playState = PLAY_STATE_STOP;
+
+		var playInterval = window.setInterval(initInterval, 24 * 60 * 60 * 1000);
+
+		var roleDiv = document.getElementById('roleDiv');
+		var wordDiv = document.getElementById('wordDiv');
+		var currentWord = document.getElementById('currentWord');
+
+		mui('.mui-scroll').scroll();
+
+		mui.back = function() {
+			window.clearInterval(playInterval);
+
+			mui.plusReady(function() {
+				plus.webview.currentWebview().close();
+			})
+		};
+
+		window.onload = function() {
+			loadTheme();
+
+			mui.plusReady(function() {
+				var self = plus.webview.currentWebview();
+				languageType = self.languageType;
+				courseTitle = self.ctitle;
+				courseId = self.cid;
+				
+				document.getElementById('title').innerHTML = courseTitle;
+
+				loadRole();
+
+				loadWords();
+				
+				contentHeight()
+			})
+		}
+
+        function contentHeight() {
+            mui.plusReady(function() {
+                var winHeight = 0;
+                if(window.innerHeight)
+                    winHeight = window.innerHeight;
+                else if((document.body) && (document.body.clientHeight))
+                    winHeight = document.body.clientHeight;
+                if(document.documentElement && document.documentElement.clientHeight)
+                    winHeight = document.documentElement.clientHeight;
+                    
+                var es = document.getElementsByClassName("chart-box");
+                var i;
+                for(i = 0; i < es.length; i++) {
+                    es[i].style.height = winHeight - 54 + "px";
+                }
+                
+                var es2 = document.getElementsByClassName("list-button");
+                var i2;
+                for(i2 = 0; i2 < es2.length; i2++) {
+                    es2[i2].style.height = winHeight / 6 + "px";
+                }
+                
+                //中间大图DIV高度
+                var es3 = document.getElementsByClassName("show-class-big");
+                var i3;
+                for(i3 = 0; i3 < es3.length; i3++) {
+                    es3[i3].style.height = winHeight - 64 + "px";
+                }
+                
+            })
+
+        }
+
+		function loadWords() {
+			queryCourseWords(courseId, function(arr) {
+				words = arr;
+
+				currentWord.src = getWordImgAbsolute(courseId, arr[0]);
+
+				addWords();
+
+			}, function(e) {
+				console.log(e.message);
+			});
+		}
+
+		function addWords() {
+			clearChildControl(wordDiv);
+
+			for(var i = 0; i < words.length; i++) {
+				(function() {
+					var index = i;
+
+					var rootDiv = document.createElement('div');
+					rootDiv.className = 'mui-col-sm-6 learn-class-list';
+
+					var button = document.createElement('button');
+					button.id = 'word' + index;
+					button.className = 'button button-3d button-box list-button';
+					button.innerHTML = '<img src="' + getWordImgAbsolute(courseId, words[i]) + '" width="80%" alt="">';
+					button.addEventListener('tap', function() {
+						// 把上一个选中的清除掉
+						var checkedDiv = wordDiv.querySelector('.mui-btn-success');
+						if(checkedDiv != null) {
+							checkedDiv.classList.remove('mui-btn-success');
+						}
+
+						button.classList.add('mui-btn-success');
+
+						wordNum = index;
+
+						tapPlay();
+
+					}, false);
+
+					rootDiv.appendChild(button);
+
+					wordDiv.appendChild(rootDiv);
+
+				})();
+			}
+		}
+
+		function loadRole() {
+			clearChildControl(roleDiv);
+
+			for(var i = 0; i < role_img.length; i++) {
+				(function() {
+					var index = i;
+
+					var roleImg = role_img[index];
+
+					var rootDiv = document.createElement('div');
+					rootDiv.className = 'mui-col-sm-6 persion-list';
+
+					var button = document.createElement('button');
+					button.id = 'role' + index;
+					button.className = 'mui-btn no-border';
+					button.innerHTML = '<img width="100%" src="../img/' + roleImg + '">';
+					button.addEventListener('tap', function() {
+						var currentRole = roleDiv.querySelector('.mui-btn-success');
+						if(currentRole != null) {
+							// 把上一个选中的清除掉
+							currentRole.classList.remove('mui-btn-success');
+						}
+
+						if(index == 6) {
+							loopTapAction();
+
+						} else if(index == 7) {
+							randomTapAction();
+
+						} else {
+							peopleNum = index;
+
+							// 当前按纽添加选中效果
+							button.classList.add('mui-btn-success');
+
+							tapPlay();
+						}
+
+					}, false);
+
+					rootDiv.appendChild(button);
+
+					roleDiv.appendChild(rootDiv);
+				})();
+			}
+		} // end loadRole
+
+		function loopTapAction() {
+			if(playState == PLAY_STATE_PLAY_LOOP) {
+				playState = PLAY_STATE_STOP;
+				window.clearInterval(playInterval);
+
+			} else {
+				playState = PLAY_STATE_PLAY_LOOP;
+				window.clearInterval(playInterval);
+				playInterval = window.setInterval(loopPlay, READ_INTERVAL);
+			}
+		}
+
+		function randomTapAction() {
+			if(playState == PLAY_STATE_PLAY_RANDOM) {
+				playState = PLAY_STATE_STOP;
+				window.clearInterval(playInterval);
+			} else {
+				playState = PLAY_STATE_PLAY_RANDOM;
+				window.clearInterval(playInterval);
+				playInterval = window.setInterval(randomPlay, READ_INTERVAL);
+			}
+		}
+
+		function initInterval() {
+			console.log('初始化Interval...');
+		}
+
+		// 循环播放
+		// 每个单词分别由6种角色读一遍，然后执行下一个单词
+		function loopPlay() {
+			if(player != null) {
+				player.stop();
+			}
+
+			if(wordNum == -1)
+				wordNum = 0;
+
+			playAudio(getLoopPeople(), getLoopWord(), function() {
+				if(peopleNum == 5) {
+					wordNum = (++wordNum % words.length);
+				}
+			}, function() {
+				if(peopleNum == 5) {
+					wordNum = (++wordNum % words.length);
+				}
+			});
+		}
+
+		// 随机播放
+		// 单词和人同时随机
+		function randomPlay() {
+			if(player != null) {
+				player.stop();
+			}
+
+			if(peopleNum == -1)
+				peopleNum = 0;
+
+			if(wordNum == -1)
+				wordNum = 0;
+
+			playAudio(getRandomPeople(), getRandomWord(), function() {}, function() {
+				randomPlay();
+			});
+		}
+
+		// 手动点击播放
+		function tapPlay() {
+			if(player != null) {
+				player.stop();
+			}
+
+			playState = PLAY_STATE_STOP;
+			window.clearInterval(playInterval);
+
+			playAudio(peopleNum, wordNum, function() {}, function() {
+				mui.toast('没有找到该单词读音');
+			});
+		}
+
+		// 取得人员随机数
+		function getRandomPeople() {
+			peopleNum = getRandomDif(6, peopleNum);
+			return peopleNum;
+		}
+
+		// 取得单词随机数
+		function getRandomWord() {
+			wordNum = getRandomDif(words.length, wordNum);
+			return wordNum;
+		}
+
+		// 顺序取得人员
+		function getLoopPeople() {
+			peopleNum = (++peopleNum % 6);
+			return peopleNum;
+		}
+
+		// 顺序取得单词
+		function getLoopWord() {
+			wordNum = (wordNum % words.length);
+			return wordNum;
+		}
+
+		function playAudio(peopleNum, wordNum, success, failure) {
+			if(peopleNum == -1 || wordNum == -1)
+				return;
+
+			var wordName = words[wordNum];
+
+			// 设置选中效果
+			var tempDiv1 = roleDiv.querySelector('.mui-btn-success');
+			if(tempDiv1 != null) {
+				tempDiv1.classList.remove('mui-btn-success');
+			}
+			if(playState != PLAY_STATE_PLAY_RANDOM) {
+				document.getElementById('role' + peopleNum).classList.add('mui-btn-success');
+			}
+
+			var tempDiv2 = wordDiv.querySelector('.mui-btn-success');
+			if(tempDiv2 != null) {
+				tempDiv2.classList.remove('mui-btn-success');
+			}
+			document.getElementById('word' + wordNum).classList.add('mui-btn-success');
+
+			// 显示大图
+			currentWord.src = getWordImgAbsolute(courseId, wordName);
+
+			var audioUrl = getMP3ByRoleName(courseId,wordName, peopleNum, languageType);
+			player = plus.audio.createPlayer(audioUrl);
+			player.play(function() {
+				console.log('音频播放成功 ' + peopleNum + '-' + wordName);
+
+				if(typeof success == 'function') {
+					success();
+				}
+
+			}, function(e) {
+				console.log('音频播放失败 ' + peopleNum + '-' + wordName + '   ' + e.message);
+				player.stop();
+				
+				if(typeof failure == 'function') {
+					failure();
+				}
+			});
+		}
+	</script>
+
+</html>

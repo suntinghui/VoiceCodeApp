@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>主题设置</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+
+	</head>
+
+	<body>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">主题设置</h1>
+		</header>
+
+		<div class="mui-content">
+			<ul class="mui-table-view mui-table-view-radio" style="margin-top: 0;">
+				<!--约定：id使用主题的CSS文件名-->
+				<li id="red.css" class="mui-table-view-cell">
+					<a class="mui-navigate-right">红</a>
+				</li>
+				<li id="blue.css" class="mui-table-view-cell">
+					<a class="mui-navigate-right">蓝</a>
+				</li>
+				<li id='pink.css' class="mui-table-view-cell">
+					<a class="mui-navigate-right">粉</a>
+				</li>
+				<li id="yellow.css" class="mui-table-view-cell">
+					<a id="4" class="mui-navigate-right">黄</a>
+				</li>
+			</ul>
+
+		</div>
+
+		<script type="text/javascript">
+			mui.init();
+
+			window.onload = function() {
+				loadTheme();
+
+				markSelectedTheme();
+			}
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					// 返回到选择语言界面。
+					self.opener().opener().reload();
+				})
+			}
+
+			function markSelectedTheme() {
+				var theme = storageGetItem(kTheme);
+				if(theme == null) {
+					document.getElementById('red.css').classList.add('mui-selected');
+				} else {
+					document.getElementById(theme.split('/').pop().toString()).classList.add('mui-selected');
+				}
+			}
+
+			document.querySelector('.mui-table-view.mui-table-view-radio').addEventListener('selected', function(e) {
+				console.log("当前选中的为：" + e.detail.el.id);
+				storageSetItem(kTheme, '../css/theme/' + e.detail.el.id);
+
+				mui.plusReady(function() {
+					plus.webview.currentWebview().reload();
+				})
+			});
+			
+			
+		</script>
+
+	</body>
+
+</html>

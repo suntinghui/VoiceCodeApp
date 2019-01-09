@@ -1,0 +1,337 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>分享</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../fonts/iconfont.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+		<style type="text/css">
+			.mui-content {
+				height: calc(100vh);
+				background: url(../img/bg-share.png) bottom left #4A90E2 no-repeat;
+				background-size: 100%;
+			}
+			
+			.share-count {
+				width: 450px;
+				margin: 0 auto;
+				height: 185px;
+				padding-top: 115px;
+				text-align: center;
+				background: url(../img/bg-share-count.png) center center no-repeat;
+				background-size: 80%;
+			}
+			
+			.share-qcode {
+				width: 160px;
+				height: 120px;
+				position: absolute;
+				right: 10px;
+				text-align: right;
+				bottom: 10px;
+			}
+			
+			.share-johnson {
+				position: absolute;
+				text-align: left;
+				bottom: 12px;
+				left:-5px
+			}
+			
+			.share-icon-group {
+				width: 220px;
+				position: absolute;
+				bottom: 5px;
+				left: 45%;
+				margin-left: -80px;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">语音密码</h1>
+		</header>
+
+		<div class="mui-content padding-top">
+			<div id="shareContent" class="share-count">
+				<div id="accuracyInfo" class="share-count-right"></div>
+				<div id="outstripInfo" style="margin-top: 10px;" class="share-count-right"></div>
+			</div>
+			
+			<div class="share-johnson">
+				<img src="../img/share_johnson.png" width="150px" alt="" />
+			</div>
+
+			<div class="share-qcode">
+				<img src="../img/qcode.png" width="100px" alt="" />
+				<h6>长按识别二维码开始学习</h6>
+			</div>
+
+			<div id="shareDiv" class="share-icon-group mui-text-center">
+				<div>
+					<i id="wechatBtn" class="mui-icon mui-icon-weixin" style="font-size: 3rem; color: #59B43F;"></i>
+					<i id="timelineBtn" class="mui-icon mui-icon-pengyouquan" style="font-size: 3rem; color: #D6795F;margin: auto 20px;"></i>
+					<i id="qqBtn" class="mui-icon mui-icon-qq" style="font-size: 3rem; color: #69AEE4;"></i>
+				</div>
+			</div>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+
+		<script type="text/javascript">
+			var rightCount = 0;
+			var wrongCount = 0;
+			var consumTime = 0;
+
+			var shareDiv = document.getElementById('shareDiv');
+			var wechatBtn = document.getElementById('wechatBtn');
+			var timelineBtn = document.getElementById('timelineBtn');
+			var qqBtn = document.getElementById('qqBtn');
+
+			mui.init();
+			
+			if (mui.os.ipad) {
+				document.getElementById('shareContent').style.margin = '15% auto';
+			}
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					mui.fire(self.opener(), 'shareFinished');
+					self.close();
+				})
+			};
+
+			window.onload = function() {
+                contentHeight()
+				loadTheme();
+
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					rightCount = self.cright;
+					wrongCount = self.cwrong;
+					consumTime = self.ctime;
+
+					refreshInfo();
+				})
+			}
+
+            function contentHeight() {
+                mui.plusReady(function() {
+                    var winHeight = 0;
+                    if(window.innerHeight)
+                        winHeight = window.innerHeight;
+                    else if((document.body) && (document.body.clientHeight))
+                        winHeight = document.body.clientHeight;
+                    if(document.documentElement && document.documentElement.clientHeight)
+                        winHeight = document.documentElement.clientHeight;
+
+                    var es = document.getElementsByClassName("mui-content");
+                    var i;
+                    for(i = 0; i < es.length; i++) {
+                        es[i].style.height = winHeight + "px";
+                    }
+                })
+
+            }
+
+
+			function refreshInfo() {
+				document.getElementById('accuracyInfo').innerHTML = '正确率：' + getAccuracyInfo();
+				document.getElementById('outstripInfo').innerHTML = '超过<font size="4" color="#ff0000">' + getOutstripInfo() + '</font>的用户';
+			}
+
+			function getAccuracyInfo() {
+				if(rightCount == 0)
+					return '0%';
+
+				return Math.ceil(rightCount / (rightCount + wrongCount) * 100) + '%';
+			}
+
+			function getOutstripInfo() {
+				if(rightCount == 0)
+					return '0%';
+
+				return(Math.ceil(rightCount / (rightCount + wrongCount) * 100) - 2 * Math.random()).toFixed(2) + '%';
+			}
+
+			wechatBtn.addEventListener('tap', function() {
+				doShare('weixin', 'WXSceneSession');
+			}, false);
+
+			timelineBtn.addEventListener('tap', function() {
+				doShare('weixin', 'WXSceneTimeline');
+			}, false);
+
+			qqBtn.addEventListener('tap', function() {
+				doShare('qq', null);
+			}, false);
+
+			function doShare(id, ex) {
+				shareDiv.style.display = 'none';
+
+				window.setTimeout(function() {
+					captureWebview(function() {
+						shareAction(id, ex);
+					});
+				}, 500);
+			}
+		</script>
+
+		<script>
+			var Intent = null,
+				File = null,
+				Uri = null,
+				main = null;
+			var shares = null;
+			var shareImageUrl = '';
+
+			mui.plusReady(function() {
+				updateSerivces();
+
+				if(plus.os.name == "Android") {
+					Intent = plus.android.importClass("android.content.Intent");
+					File = plus.android.importClass("java.io.File");
+					Uri = plus.android.importClass("android.net.Uri");
+					main = plus.android.runtimeMainActivity();
+				}
+			})
+			/**
+			 * 更新分享服务
+			 */
+			function updateSerivces() {
+				plus.share.getServices(function(s) {
+					shares = {};
+					for(var i in s) {
+						var t = s[i];
+						shares[t.id] = t;
+					}
+					outSet("获取分享服务列表成功");
+
+				}, function(e) {
+					outSet("获取分享服务列表失败：" + e.message);
+				});
+			}
+
+			/**
+			 * 分享操作
+			 */
+			function shareAction(id, ex) {
+				console.log('id = ' + id);
+				console.log('ex = ' + ex);
+				console.log('shares[id]' + shares[id]);
+				var s = null;
+
+				if(!id || !(s = shares[id])) {
+					outLine("无效的分享服务！");
+					return;
+				}
+				if(s.authenticated) {
+					outSet("---已授权---");
+					shareMessage(s, ex);
+				} else {
+					outSet("---未授权---");
+					s.authorize(function() {
+						shareMessage(s, ex);
+					}, function(e) {
+						outLine("认证授权失败");
+					});
+				}
+			}
+
+			/**
+			 * 发送分享消息
+			 */
+			function shareMessage(s, ex) {
+				var msg = {
+					content: '语音密码ORIDENS',
+					//href: 'http://blog.csdn.net/zhuming3834', // 如果带有href则为分享链接，否则为分享图片
+					title: '语音密码ORIDENS小测验',
+					content: '语音密码ORIDENS测验分享',
+					thumbs: [shareImageUrl],
+					pictures: [shareImageUrl],
+					extra: {
+						scene: ex
+					}
+				};
+				s.send(msg, function() {
+					outLine("分享成功!");
+				}, function(e) {
+					outLine("分享失败!");
+				});
+
+				s.send
+			}
+
+			// 控制台输出日志
+			function outSet(msg) {
+				console.log(msg);
+			}
+			// 界面弹出吐司提示
+			function outLine(msg) {
+				mui.toast(msg);
+			}
+
+			var shareImgUrl;
+
+			function captureWebview(success) {
+				var bitmap = new plus.nativeObj.Bitmap('test');
+				var wc = plus.webview.currentWebview();
+				wc.draw(bitmap, function() {
+					console.log('截屏绘制图片成功');
+					shareDiv.style.display = 'inline';
+
+					bitmap.save(getCaptureImgUrl(), {
+						overwrite: true,
+						format: 'jpg',
+						quality: 50,
+						clip: {
+							/***
+							 * 1、left和top是按手机屏幕竖方向为基准
+							 * 2、当左侧截取后，下部分会显示不全。
+							 * 
+							 */
+							//top: '0px',
+							//left: (document.getElementById('header').clientHeight + 'px'),
+							width: '100%',
+							height: '100%'
+						}
+
+					}, function(event) {
+						console.log('size:' + event.size / 1024 + 'KB');
+
+						shareImageUrl = event.target;
+
+						if(typeof success == 'function') {
+							success();
+						}
+
+					}, function(e) {
+						console.log('分享失败，请重试');
+					});
+
+				}, function(e) {
+					console.log('截屏绘制图片失败：' + JSON.stringify(e));
+
+					mui.alert('分享失败，请重试');
+				});
+			}
+		</script>
+
+	</body>
+
+</html>

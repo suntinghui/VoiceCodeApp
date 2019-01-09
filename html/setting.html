@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>个人中心</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">个人中心</h1>
+		</header>
+
+		<div id="contentDiv" class="mui-content">
+			<div class="mui-row">
+				<div class="mui-col-sm-6" style="padding: 25px; border-right: 1px solid #e2e2e2; height: calc(100vh - 44px);">
+					<div class="mui-text-center">
+						<img src="../img/img-avatar.png" alt="">
+						<h4 style="margin-top: 5px;" id="phoneNum" class="spec-font">用户名</h4>
+					</div>
+
+					<div id="vipInfoDiv" style="color: #9B9B9B;padding-top: 15px; font-size:.9rem;">
+						<span id="vipTip"><i class="iconfont icon-VIP"></i> 您还不是VIP会员，加入会员可学习所有精品课程，</span>
+						<a style="display: inline;" id="registerVIP" href="javascript:void(0)">立即购买</a>
+					</div>
+
+					<div id="logoutDiv" class="mui-text-center" style="padding-top: 20px;">
+						<button type="button" id="logoutBtn" class="mui-btn mui-btn-danger mui-btn-block">退出登录</button>
+					</div>
+
+				</div>
+				<div class="mui-col-sm-6">
+					<div class="mui-row mui-text-center" style="font-size:.9rem;">
+						<div id="courseManage" class="mui-col-sm-4 padding">
+							<img src="../img/icon-account-class.png" style="width:60%; max-width:100px;" alt="">
+							<div>课程管理</div>
+						</div>
+						<div id="unbind" class="mui-col-sm-4 padding">
+							<img src="../img/icon-account-bind.png" style="width:60%; max-width:100px;" alt="">
+							<div>解除绑定</div>
+						</div>
+						<div id="aboutUs" class="mui-col-sm-4 padding">
+							<img src="../img/icon-account-aboutus.png" style="width:60%; max-width:100px;" alt="">
+							<div>关于我们</div>
+						</div>
+						<div id="setTheme" class="mui-col-sm-4 padding">
+							<img src="../img/icon-account-theme.png" style="width:60%; max-width:100px;" alt="">
+							<div>主题设置</div>
+						</div>
+						<div id="update" class="mui-col-sm-4 padding" style="position:relative;">
+							<img src="../img/icon-account-update.png" style="width:60%; max-width:100px;" alt="">
+							<div>检查更新</div>
+							<span id="canUpdate" style="display: none;" class="setting-badge"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<script src="../js/mui.min.js "></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script type="text/javascript ">
+			mui.init();
+
+			if(mui.os.ipad) {
+				document.getElementById('contentDiv').style.margin = '10% auto';
+			}
+
+			var registerVIP = document.getElementById('registerVIP');
+			var vipTip = document.getElementById('vipTip');
+			var courseManage = document.getElementById('courseManage');
+			var unbind = document.getElementById('unbind');
+			var aboutUs = document.getElementById('aboutUs');
+			var setTheme = document.getElementById('setTheme');
+			var update = document.getElementById('update');
+			var logoutBtn = document.getElementById('logoutBtn');
+
+			document.getElementById('phoneNum').innerHTML = storageGetItem(kUserName);
+
+			window.addEventListener('refreshUserInfo', function() {
+				queryUserInfo(true, function(resp) {
+					console.log("刷新用户信息成功...");
+
+					loadVIPInfo(resp);
+
+				}, function() {
+					console.log("刷新用户信息失败...");
+
+					logout();
+				})
+			}, false);
+
+			window.onload = function() {
+				loadTheme();
+
+				//loadVIPInfo(JSON.parse(storageGetItem(kUserInfo)));
+				
+				mui.plusReady(function(){
+					mui.fire(plus.webview.currentWebview(), 'refreshUserInfo');
+				})
+
+				autoCheckUpdate();
+			};
+
+			// 刷新用户信息
+			function loadVIPInfo(userInfo) {
+				try {
+					if(userInfo.outTime == '' || userInfo.vipState == '-1') {
+						vipTip.innerHTML = '<i class="iconfont icon-VIP"></i> 您还不是VIP会员，加入会员可学习所有精品课程，';
+						registerVIP.style.display = 'inline';
+
+					} else {
+						vipTip.innerHTML = '<i class="iconfont icon-VIP" style="color:#F5A623;"></i> 您已经是VIP会员,可以学习所有课程。有效期至' + userInfo.outTime + '。';
+						registerVIP.style.display = 'none';
+					}
+				} catch(e) {
+					console.log(e.message);
+
+					vipTip.innerHTML = '<i class="iconfont icon-VIP"></i> 您还不是VIP会员，加入会员可学习所有精品课程，';
+					registerVIP.style.display = 'inline';
+				}
+			}
+
+			registerVIP.addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'account-buyVip.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+
+			// 课程管理
+			courseManage.addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'account-manageClass.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+
+			// 解除绑定
+			unbind.addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'account-unbind.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+
+			// 更新
+			update.addEventListener('tap', function() {
+				requestCheckNewVersion(false);
+				document.getElementById('canUpdate').style.display = 'none';
+			}, false);
+
+			// 设置主题
+			setTheme.addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'account-theme.html',
+					id: Math.random() + '',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+
+			// 关于我们
+			aboutUs.addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'account-aboutUs.html',
+					id: 'account-aboutUs.html',
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					}
+				});
+			}, false);
+
+			// 退出登录
+			logoutBtn.addEventListener('tap', function() {
+				logoutEvent();
+			}, false);
+
+			// 检查更新
+			function requestCheckNewVersion(autoCheck) {
+				if(!autoCheck) {
+					checkNetwork();
+
+					mui.plusReady(function() {
+						showProgressDialog("正在检查新版本...");
+					});
+				}
+
+				mui.ajax(FIR_CHECK_URL, {
+					dataType: 'json',
+					type: 'get',
+					timeout: TIMEOUT,
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						console.log(JSON.stringify(data));
+
+						hideProgressDialog();
+
+						responseCheckNewVersion(autoCheck, data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseCheckNewVersion(autoCheck, resp) {
+				try {
+					mui.getJSON("../manifest.json", null, function(data) {
+						var localVer = data.version.code;
+						var newVer = resp.version;
+						var flag = ((newVer - 0) > (localVer - 0));
+
+						if(autoCheck) {
+							if(flag) {
+								document.getElementById('canUpdate').style.display = 'block';
+							} else {
+								document.getElementById('canUpdate').style.display = 'none';
+							}
+						} else {
+							if(flag) {
+								mui.confirm('有新版本需要立即更新吗？', '检测到新版本', ['取消', '确认'], function(e) {
+									if(e.index == 1) {
+										hideProgressDialog();
+										plus.runtime.openURL(mui.os.ios ? FIR_LINK_IOS : FIR_LINK_Android);
+									} else {
+										hideProgressDialog();
+									}
+								})
+
+							} else {
+								hideProgressDialog();
+								mui.toast('当前已是最新版本');
+							}
+						}
+
+					});
+				} catch(e) {
+					console.log(e);
+					mui.toast('当前已是最新版本');
+				}
+			}
+
+			function autoCheckUpdate() {
+				requestCheckNewVersion(true);
+			}
+
+			function logoutEvent() {
+				mui.confirm('您确定要注销登录吗？', '提示', ['取消', '确认'], function(e) {
+					if(e.index == 1) {
+
+						logout();
+
+						mui.toast("已退出登录");
+					}
+				})
+			}; // end logout
+		</script>
+
+	</body>
+
+</html>

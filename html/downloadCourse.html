@@ -1,0 +1,371 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+		<style>
+			.mui-control-content {
+				/*height: calc(100vh - 104px);*/
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav"></a>
+			<h1 id="title" class="mui-title">单词库</h1>
+		</header>
+
+		<div class="mui-content">
+			<div style="padding: 10px 25%;">
+				<div id="segmentedControl" class="mui-segmented-control mui-segmented-control-negative">
+					<a class="mui-control-item mui-active" href="#item1">基础单词库</a>
+					<a class="mui-control-item" href="#item2">课堂单词库</a>
+				</div>
+			</div>
+
+			<!--基础单词库-->
+			<div id="item1" class="mui-control-content mui-active">
+				<div class="mui-scroll-wrapper">
+					<div class="mui-scroll padding-top">
+						<div id="basicDiv" class="courseDiv mui-row mui-text-center">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!--课堂单词库-->
+			<div id="item2" class="mui-control-content">
+				<div class="mui-scroll-wrapper">
+					<div class="mui-scroll padding-top">
+						<div id="classDiv" class="courseDiv mui-row mui-text-center">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			mui.init();
+
+			mui('.mui-scroll-wrapper').scroll();
+
+			var basicDiv = document.getElementById("basicDiv");
+			var classDiv = document.getElementById('classDiv');
+
+			var downloadedList = new Array(); // 已下载课程的ID列表
+			var allList = new Array();
+
+			var languageType = 'cn'; // 1中文课程 2英文课程 {非1,2表示所有}
+
+			window.onload = function() {
+                contentHeight()
+				loadTheme();
+
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					languageType = self.languageType;
+
+					queryDownloadedCourse();
+				});
+			};
+            function contentHeight() {
+                mui.plusReady(function() {
+                    var winHeight = 0;
+                    if(window.innerHeight)
+                        winHeight = window.innerHeight;
+                    else if((document.body) && (document.body.clientHeight))
+                        winHeight = document.body.clientHeight;
+                    if(document.documentElement && document.documentElement.clientHeight)
+                        winHeight = document.documentElement.clientHeight;
+
+                    var es = document.getElementsByClassName("mui-control-content");
+                    var i;
+                    for(i = 0; i < es.length; i++) {
+                        es[i].style.height = winHeight - 104 + "px";
+                    }
+                })
+
+            }
+            
+
+
+			// 首先加载已经下载的课程，已下载的课程排在前面
+			function queryDownloadedCourse() {
+				showProgressDialog("正在加载课程...");
+
+				queryAllDownloadedCourse(function(arr) {
+					downloadedList = arr;
+
+					loadDownloadedCourse();
+
+				}, function(e) {
+					console.log(e.message)
+
+					hideProgressDialog();
+				});
+			}
+
+			function loadDownloadedCourse() {
+				try {
+					// 首先清空下面的所有结点
+					clearChildControl(basicDiv);
+					clearChildControl(classDiv);
+
+					// 1、首先加载已经下载的课程
+					for(var i = 0; i < downloadedList.length; i++) {
+						var courseId = downloadedList[i];
+						var course = JSON.parse(storageGetItem('COURSE' + courseId));
+
+						if(course.languageType != languageType)
+							continue;
+
+						var courseDiv = getCourseView(i, course, true);
+
+						// 1基础课程 2课堂词库
+						if(course.libraryType == '1') {
+							basicDiv.appendChild(courseDiv);
+						} else if(course.libraryType == '2') {
+							classDiv.appendChild(courseDiv);
+						}
+					}
+
+					// 联网查询课程
+					requestCourse();
+
+				} catch(e) {
+					hideProgressDialog();
+
+					console.log(e.message);
+				}
+			}
+
+			function requestCourse() {
+				mui.plusReady(function() {
+					showProgressDialog("正在加载课程...");
+
+					var arg = {
+						machineCode: plus.device.uuid,
+						phone: storageGetItem(kUserName),
+						libraryType: 0, // 1基础课程 2课堂词库 {非1,2表示所有}
+						languageType: languageType
+					}
+
+					var url = getHost() + "/VoiceCodeService.asmx/GetVoices";
+					mui.ajax(url, {
+						dataType: 'json',
+						data: JSON.stringify(arg),
+						type: 'post',
+						timeout: TIMEOUT,
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						success: function(data) {
+							responseCourse(JSON.parse(data.d.respObj));
+							hideProgressDialog();
+						},
+						error: function(xhr, type, errorThrown) {
+							hideProgressDialog();
+
+							console.log(getHttpErrorDesp(type));
+							mui.toast('加载失败，请刷新');
+						}
+					});
+				});
+			}
+
+			function responseCourse(resp) {
+				allList = resp;
+
+				// 将课程信息保存在本地
+				storageSetItem(kCourseList, JSON.stringify(resp));
+
+				// 2、从所有的课程中加载去除已下载课程后的课程
+				for(var i = 0; i < resp.length; i++) {
+					var record = resp[i];
+
+					if(contains(downloadedList, record.id))
+						continue;
+
+					var courseDiv = getCourseView(i, record, false);
+
+					// 1基础课程 2课堂词库
+					if(record.libraryType == '1') {
+						basicDiv.appendChild(courseDiv);
+					} else if(record.libraryType == '2') {
+						classDiv.appendChild(courseDiv);
+					}
+
+				} // end 2
+
+				// 3、删除过期的已下载的课程
+				for(var i = 0; i < downloadedList.length; i++) {
+					var oldCourse = JSON.parse(storageGetItem('COURSE' + downloadedList[i]));
+
+					for(var j = 0; j < allList.length; j++) {
+						var newCourse = allList[j];
+
+						if(oldCourse.id == newCourse.id) {
+							// 如果图片的版本号或是zip的版本号不同，则删该课程，需要用户去重新下载
+							if(oldCourse.versions != newCourse.versions || oldCourse.imgVersions != newCourse.imgVersions || oldCourse.title != newCourse.title) {
+								// 简化处理，删除课程后不再进行其他处理，在点击课程后再进行重新判断
+								deleteCourse(oldCourse.id, function() {
+									console.log('自动删除-更新课程成功。。。');
+
+									queryDownloadedCourse();
+
+								}, function(e) {
+									console.log('自动删除-更新课程失败' + e.message);
+								});
+								break;
+							}
+						}
+
+					}
+				} // end 3
+
+				if(basicDiv.childElementCount == 0) {
+					basicDiv.appendChild(getNoDataView('没有查询到课程'));
+				}
+				if(classDiv.childElementCount == 0) {
+					classDiv.appendChild(getNoDataView('没有查询到课程'));
+				}
+
+			}
+
+			mui('.courseDiv').on('tap', '.download-course-list', function(e) {
+				var record = JSON.parse(this.getAttribute('id'));
+
+				mui.plusReady(function() {
+					judgeHasDownload(record.id, function(flag) {
+						// 已经下载的课程直接打开即可
+						if(flag) {
+							mui.openWindow({
+								url: 'learnCourse.html',
+								id: Math.random() + '',
+								preload: true,
+								show: {
+									aniShow: 'pop-in'
+								},
+								extras: {
+									languageType: languageType,
+									cid: record.id,
+									ctitle: record.title
+								}
+							});
+
+							return;
+						}
+
+						// 如果用户是VIP用户,所有未下载的课程直接下载即可。
+						if(isVip()) {
+							showProgressDialog("正在下载...");
+							downloadCourse(record);
+
+						} else {
+							// 如果用户非VIP，则需要区分课程性质
+							if(record.IsCharged == '1') { // 1收费 0免费
+								mui.alert('该课程只有付费用户可以学习使用，赶快加入我们的VIP大家庭吧^_^', '提示', '确定', function() {
+									mui.openWindow({
+										url: 'account-buyVip.html',
+										id: Math.random() + '',
+										preload: true,
+										show: {
+											aniShow: 'pop-in'
+										}
+									});
+								});
+							} else {
+								showProgressDialog("正在下载...");
+								downloadCourse(record);
+							}
+						}
+
+					}, function(e) {
+						console.log(e.message);
+						mui.toast('下载失败，请重试');
+					});
+				});
+			});
+
+			function downloadCourse(course) {
+				downloadCourseImg(course.id, function() {
+					downloadCourseZip(course.id, function() {
+
+						requestCheckDownload(course.id);
+
+						// 保存信息
+						storageSetItem('COURSE' + course.id, JSON.stringify(course));
+
+						hideProgressDialog();
+
+						mui.alert('下载成功', '提示', '确定', function() {
+
+							queryDownloadedCourse();
+						});
+
+					}, function(e) {
+						hideProgressDialog();
+						console.log(e.message);
+						mui.toast('下载失败，请重试');
+					});
+				}, function(e) {
+					hideProgressDialog();
+					console.log(e.message);
+					mui.toast('下载失败，请重试');
+				});
+			}
+		</script>
+
+		<script>
+			// 发送请求验证码
+			function requestCheckDownload(courseId) {
+				mui.plusReady(function() {
+					var arg = {
+						machineCode: plus.device.uuid,
+						phone: storageGetItem(kUserName),
+						voicesid: courseId
+					}
+
+					var url = getHost() + "/VoiceCodeService.asmx/CheckCanDownload";
+					console.log(url);
+
+					mui.ajax(url, {
+						dataType: 'json',
+						data: JSON.stringify(arg),
+						type: 'post',
+						timeout: TIMEOUT,
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						success: function(data) {
+							responseCheckDownload(data.d);
+						},
+						error: function(xhr, type, errorThrown) {}
+					});
+				});
+			}
+
+			function responseCheckDownload(resp) {
+				console.log(resp.respMsg);
+			}
+		</script>
+
+	</body>
+
+</html>

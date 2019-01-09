@@ -1,0 +1,74 @@
+{
+  "html/sellang.html": {
+    "refer": [
+      "html/download.html",
+      "html/quiz.html",
+      "html/statistic.html"
+    ],
+    "resources": []
+  },
+  "html/login.html": {
+    "refer": [
+      "html/sellang.html",
+      "html/selectLang.html"
+    ],
+    "resources": []
+  },
+  "html/download.html": {
+    "resources": [
+      "js/view.js",
+      "js/util.js",
+      "js/constants.js",
+      "js/mui.min.js",
+      "css/mui.min.css"
+    ],
+    "refer": [
+      "html/learn.html"
+    ]
+  },
+  "html/selectLang.html": {
+    "refer": [
+      "html/downloadCourse.html",
+      "html/selectQuiz.html",
+      "html/setting.html",
+      "html/share.html"
+    ],
+    "resources": []
+  },
+  "html/downloadCourse.html": {
+    "refer": [
+      "html/learnCourse.html",
+      "html/account-buyVip.html"
+    ],
+    "resources": []
+  },
+  "html/selectQuiz.html": {
+    "refer": [
+      "html/quizCourse.html"
+    ],
+    "resources": []
+  },
+  "html/setting.html": {
+    "refer": [
+      "html/login.html",
+      "html/account-manageClass.html",
+      "html/account-unbind.html",
+      "html/account-aboutUs.html",
+      "html/account-theme.html",
+      "html/account-buyVip.html"
+    ],
+    "resources": []
+  },
+  "html/quizCourse.html": {
+    "refer": [
+      "html/quiz-share.html"
+    ],
+    "resources": []
+  },
+  "html/account-unbind.html": {
+    "refer": [
+      "html/login.html"
+    ],
+    "resources": []
+  }
+}

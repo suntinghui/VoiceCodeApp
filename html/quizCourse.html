@@ -1,0 +1,435 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../fonts/iconfont.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/buttons.css" />
+		<link rel="stylesheet" href="../css/view.css" />
+		<link rel="stylesheet" href="../css/theme/red.css" id="themeCss" />
+		<style>
+			#popover {
+				background: transparent;
+				text-align: center;
+				width: 100%;
+				height: calc(100vh);
+				line-height: calc(100vh);
+			}
+			
+			#resultText {
+				font-weight: bold;
+				color: #FFEAA4;
+				margin-top: 20px;
+				font-size: 26px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">测试</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="popover" class="mui-popover" style="display: none;">
+				<div id="resultDiv">
+					<img id="resultImg" src="../img/icon-right.png" style="height:100px;" />
+				</div>
+			</div>
+
+			<ul id="list" class="quiz-list mui-text-center">
+			</ul>
+
+		</div>
+
+		<nav id="footerBar" class="mui-bar mui-bar-tab" style="height: 44px; line-height: 44px; background: #eee; color: #000;">
+			<div id="startDiv" style="display: block;" class="mui-text-center">开始测试</div>
+			<div id="infoDiv" style="display: none;" class="mui-text-center"><span id="time" class="padding">时间:00:00</span> <span id="right" class="padding">正确:0</span> <span id="wrong" class="padding">错误:0</span></div>
+		</nav>
+
+		<script type="text/javascript" src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/file.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/voicecode.js"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			var courseId;
+
+			var languageType = 'cn';
+
+			var player;
+			var showWords; // 打乱顺序后的单词数组，使其随机显示
+			var readWords; // 打乱顺序后的阅读数组，使其测试随机
+
+			var rightCount = 0; // 测试正确数
+			var wrongCount = 0; // 测试错误数
+
+			var startTime = 0; // 开始测试时间
+			var stopTime = 0; // 结束测试时间
+
+			var wordIndex = 0; // 当前测试的单词坐标
+			var roleIndex = 0; // 当前角色
+
+			var testing = false; // 是否正在测试中
+			var canTip = false; // 用户能否点击单词
+
+			var startDiv = document.getElementById('startDiv');
+			var infoDiv = document.getElementById('infoDiv');
+			var time = document.getElementById('time');
+			var right = document.getElementById('right');
+			var wrong = document.getElementById('wrong');
+
+			var pardonInterval; // 当用户没有听清读出的单词时，时隔3秒再读一次。
+
+			window.onload = function() {
+				loadTheme();
+
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					courseId = self.cid;
+					languageType = self.languageType;
+
+					refreshWords();
+					
+					contentHeight();
+				})
+			};
+
+			function contentHeight() {
+				mui.plusReady(function() {
+					var winHeight = 0;
+					if(window.innerHeight)
+						winHeight = window.innerHeight;
+					else if((document.body) && (document.body.clientHeight))
+						winHeight = document.body.clientHeight;
+					if(document.documentElement && document.documentElement.clientHeight)
+						winHeight = document.documentElement.clientHeight;
+
+					var es = document.getElementById("popover");
+					var i;
+					for(i = 0; i < es.length; i++) {
+						es[i].style.height = winHeight + "px";
+					}
+					
+					var wordHeight = document.getElementsByClassName("wordHeight");
+					var j;
+					for(j = 0; j < wordHeight.length; j++) {
+						wordHeight[j].style.height = winHeight / 6 + "px";
+					}
+				})
+
+			}
+
+			mui.back = function() {
+				notStopTip();
+			};
+
+			// 分享完成后实现连续关闭
+			window.addEventListener('shareFinished', function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			}, false);
+
+			startDiv.addEventListener('tap', function() {
+				rightCount = 0;
+				wrongCount = 0;
+				wordIndex = 0;
+
+				testing = true;
+
+				toggleInfo();
+
+				startTime = new Date().getTime();
+
+				startQuiz();
+
+			}, false);
+
+			function refreshWords() {
+				queryCourseWords(courseId, function(arr) {
+					showWords = shuffle(arr.concat());
+					readWords = shuffle(arr.concat());
+
+					addWords();
+
+				}, function(e) {
+					console.log(e.message);
+				});
+			}
+
+			function addWords() {
+				var list = document.getElementById('list');
+				// 首先清空下面的所有结点
+				while(list.hasChildNodes()) {
+					list.removeChild(list.firstChild);
+				}
+
+				var width = (100 / Math.ceil(showWords.length / 3)) + '%';
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				for(var i = 0; i < showWords.length; i++) {
+					(function() {
+						var temp = i;
+
+						var li = document.createElement('li');
+						li.style.width = width;
+
+						li.id = temp + '';
+
+						var button = document.createElement('button');
+						button.id = 'button' + temp;
+						button.className = 'button button-3d button-box wordHeight';
+						button.innerHTML = '<img src="' + getWordImgAbsolute(courseId, showWords[temp]) + '" height="100%" alt="" />';
+						// tap => click ???
+						button.addEventListener('click', function() {
+							if(!testing)
+								return;
+
+							if(!canTip)
+								return;
+
+							window.clearInterval(pardonInterval);
+
+							if(showWords[temp] == readWords[wordIndex]) {
+								console.log('正确');
+								rightCount++;
+								canTip = false;
+
+								showQuizResult('1');
+
+							} else {
+								console.log('错误');
+								wrongCount++;
+								canTip = false;
+
+								showQuizResult('0');
+
+								// 错误提示消失后显示一下正确的单词。
+								window.setTimeout(function() {
+									IKownTheWord(readWords[wordIndex]);
+								}, 1300);
+							}
+
+							window.setTimeout(function() {
+								wordIndex++;
+								startQuiz();
+							}, 2600);
+
+						}, false);
+
+						li.appendChild(button);
+
+						fragment.appendChild(li);
+					})();
+				}
+
+				list.appendChild(fragment);
+			}
+
+			function startQuiz() {
+				if(wordIndex < readWords.length) {
+					// 取得单词的朗读者角色
+					roleIndex = getRandom(6);
+
+					playAudio(function() {
+						// 播放成功后，启动定时服务，每隔一定时间再读一遍，防止用户没有听清
+						// 注意，此时没有更换单词与角色，防止因为单词或角色找不到的情况而造成混乱。
+						pardonInterval = window.setInterval(playAudio, 4000);
+
+					}, function(e) {
+						console.log(e.message);
+					});
+
+				} else {
+					stopQuiz(true);
+				}
+			}
+
+			// 每个单词的结果, 1为正确 0为错误
+			function showQuizResult(result) {
+				mui.plusReady(function() {
+					var resultImg = document.getElementById('resultImg');
+
+					mui('#popover').popover('show');
+
+					if(result == '1') {
+						resultImg.src = '../img/icon-right.png';
+
+						plus.audio.createPlayer('../audio/quiz_right.mp3').play();
+
+					} else {
+						resultImg.src = '../img/icon-wrong.png';
+
+						plus.audio.createPlayer('../audio/quiz_wrong.mp3').play();
+					}
+
+					window.setTimeout(function() {
+						mui('#popover').popover('hide');
+					}, 1200);
+				})
+			}
+
+			function stopQuiz(finish) {
+				console.log('测试结束');
+
+				try {
+					// 只有正在测试中时才有意义
+					if(testing) {
+						stopTime = new Date().getTime();
+
+						player.stop();
+
+						// 全部测试结束的才进行分享
+						if(finish) {
+							shareResult();
+						}
+					}
+
+					testing = false;
+
+					toggleInfo();
+
+				} catch(e) {
+					console.log(e.message);
+				}
+			}
+
+			function playAudio(success, failure) {
+				var wordName = readWords[wordIndex];
+
+				var audioUrl = getMP3ByRoleName(courseId, wordName, roleIndex, languageType);
+				player = plus.audio.createPlayer(audioUrl);
+				player.play(function() {
+					console.log('音频播放成功，等待用户选择 ' + wordName);
+
+					canTip = true;
+
+					if(typeof success == 'function') {
+						success();
+					}
+
+				}, function(e) {
+					console.log('音频播放失败, 将继续进行下一个 ' + wordName + '   ' + e.message);
+
+					player.stop();
+
+					wordIndex++;
+
+					startQuiz();
+
+					if(typeof failure == 'function') {
+						failure(e);
+					}
+				});
+			}
+
+			// 根据读音找出正确的单词，我总得知道哪个是对的吧。
+			function IKownTheWord(readWord) {
+				for(var i = 0; i < showWords.length; i++) {
+					if(showWords[i] == readWord) {
+						document.getElementById('button' + i).classList.add('mui-btn-success');
+						window.setTimeout(function() {
+							document.getElementById('list').querySelector('.mui-btn-success').classList.remove('mui-btn-success');
+						}, 800);
+
+						return;
+					}
+				}
+			};
+
+			// 用户手动退出时进行测试还未结束的提示
+			function notStopTip() {
+				if(testing) {
+					mui.confirm('测试还没有结束，确定要退出吗？', '确定退出？', ['取消', '确认'], function(e) {
+						if(e.index == 1) {
+							exit();
+						}
+					})
+				} else {
+					exit();
+				}
+			}
+
+			function exit() {
+				stopQuiz(false);
+
+				mui.plusReady(function() {
+					plus.webview.currentWebview().close();
+				})
+			}
+
+			function toggleInfo() {
+				if(testing) {
+					startTiming();
+
+					startDiv.style.display = 'none';
+					infoDiv.style.display = 'block';
+
+				} else {
+					stopTiming();
+
+					startDiv.style.display = 'block';
+					infoDiv.style.display = 'none';
+				}
+			}
+
+			// 去分享
+			function shareResult() {
+				mui.openWindow({
+					url: 'quiz-share.html',
+					id: Math.random() + "", // 该id在刷新上有使用，不可更改
+					preload: true,
+					show: {
+						aniShow: 'pop-in'
+					},
+					extras: {
+						cright: rightCount,
+						cwrong: wrongCount,
+						ctime: (Math.ceil((stopTime - startTime) / 1000))
+					}
+				});
+			}
+		</script>
+
+		<script>
+			var minute = 0;
+			var second = 0;
+			var interval;
+
+			function startTiming() {
+				interval = window.setInterval(showTime, 1000);
+			}
+
+			function stopTiming() {
+				window.clearInterval(interval);
+				minute = 0;
+				second = 0;
+			}
+
+			function showTime() {
+				if(++second == 60) {
+					minute++;
+					second = 0;
+				}
+
+				var showTime = checkTime(minute) + ':' + checkTime(second);
+
+				time.innerHTML = '时间:' + showTime;
+				right.innerHTML = '正确:' + rightCount;
+				wrong.innerHTML = '错误:' + wrongCount;
+			}
+		</script>
+	</body>
+
+</html>

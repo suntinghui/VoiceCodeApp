@@ -1,0 +1,52 @@
+html,body {height: 100%;}
+
+.spec-font, .mui-title {font-family: "微软雅黑" !important;}
+
+.mui-bar .header-title,.mui-bar .mui-title,.mui-bar a{ color: #fff;}
+
+.mui-title{font-size: 17px;}
+
+ul,li{margin:0;padding:0;list-style-type:none;}
+.text-indent{text-indent:2em;}
+.mui-btn-block{padding:6px 12px;}
+.mui-btn-success{ background: #50E3C2; border-color: #50E3C2;}
+.padding{padding: 10px;}
+.padding-top{padding-top:10px;}
+.margin-top{margin-top:10px;}
+.no-border{border: none;}
+
+.login-logo{width: 15%; max-width: 100px;}
+.mui-input-row label{width: 25%;}
+.mui-input-row label~input, .mui-input-row label~select, .mui-input-row label~textarea{width: 75%;}
+.mui-input-row .getCodeBtn{width: 25%;}
+.download-course-list{padding:10px;}
+.download-course-list a{ width: 90%; height: 113px; position: relative;}
+.download-course-list a h3{ position: absolute; top: 30px; left: 30px;}
+.download-course-list a h5{ position: absolute; top: 60px;left:30px;}
+.download-course-list a img{ position: absolute; top: 15px; right: 30px; max-height: 80px;}
+.button-primary h5,.button-action h5,.button-caution h5,.button-highlight h5,.button-royal h5,.button-inverse h5{color: #fff;}
+.download-course-list a .icon-download{position: absolute; right: 10px; bottom: 0px;}
+
+.persion-list{padding: 0 10px 5px 10px;}
+.persion-list .mui-btn,.persion-list button,.persion-list input[type=button],.persion-list input[type=reset],.persion-list input[type=submit]{padding: 3px;}
+.show-class-big{ height: calc(100vh - 64px); background: #fff; -webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px; padding:20px;}
+.learn-class-list{padding: 10px;}
+.learn-class-list .button-box{width:100%; height:calc(100vh / 6)}
+.learn-class-list .button-box img{ margin-top:5px;}
+.learn-class-list .button-3d{ background:#fff; box-shadow: 0 7px 0 #E1E1E1, 0 8px 3px rgba(0, 0, 0, 0.2);}
+.learn-btn{width: 80%; padding-top: 8px; padding-bottom: 8px;}
+
+.learn-class-list .mui-btn-success{ background:#50E3C2; box-shadow: 0 7px 0 #06D1A3, 0 8px 3px rgba(0, 0, 0, 0.2);}
+.quiz-list{display:flex;flex-wrap:wrap;}
+.quiz-list li{ padding:8px 10px;}
+.quiz-list{padding:5px 10px;}
+.quiz-list .button-box{width:100%; }
+.quiz-list .button-box img{ margin-top:5px;}
+.quiz-list .button-3d{ background:#fff; box-shadow: 0 7px 0 #E1E1E1, 0 8px 3px rgba(0, 0, 0, 0.2);}
+.quiz-list  .mui-btn-success{ background:#50E3C2; box-shadow: 0 7px 0 #06D1A3, 0 8px 3px rgba(0, 0, 0, 0.2);}
+
+.list-buyVip{ background:#fff; width:90%; max-width:300px; height:220px; margin:0 auto; -webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;box-shadow: 4px 4px 8px #ddd; background:url("../img/bg-buyvip.png") #fff top center no-repeat; -webkit-background-size:100%;background-size:100%;padding-top:60px; position:relative;}
+.list-buyVip .mui-btn{position:absolute; bottom:0; left:0; margin-bottom:0;}
+.quiz-statistic-number{width:80%; border:1px solid #dd524d; padding:8px 10px; -webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}
+
+.setting-badge{width:12px;height:12px;display:block; top:5px; right:20%; background:#dd524d; position:absolute; -webkit-border-radius:100%;-moz-border-radius:100%;border-radius:100%;}
