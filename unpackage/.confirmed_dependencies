@@ -70,5 +70,10 @@
       "html/login.html"
     ],
     "resources": []
+  },
+  "html/account-buyVip.html": {
+    "refer": [
+      "html/account-buyVip.html"
+    ]
   }
 }

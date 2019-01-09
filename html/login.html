@@ -31,16 +31,16 @@
 			</div>
 
 			<div class="mui-row" style="height: 40px; line-height: 40px;">
-		        <div class="mui-col-xs-8">
-		        		<div class="mui-checkbox mui-left" >
-					  <label>登录则表示您同意并遵守<a href="javascript:void(0)"  id="agreementDetail">《用户协议》</a></label>
-					  <input name="checkbox1" value="Item 1" type="checkbox" style="top:6px;" checked>
+				<div class="mui-col-xs-8" >
+					<div class="mui-checkbox mui-left" id="proDiv" style="display: none;">
+						<label>登录则表示您同意并遵守<a href="javascript:void(0)"  id="agreementDetail">《用户协议》</a></label>
+						<input id="agreementCBox" name="checkbox1" value="Item 1" type="checkbox" style="top:6px;">
 					</div>
-		        </div>
-		        <div class="mui-col-xs-4 mui-text-right">
-		        		<a id="problem" href="javascript:void(0)">登录遇到问题？</a>
-		        </div>
-		    </div>
+				</div>
+				<div class="mui-col-xs-4 mui-text-right">
+					<a id="problem" href="javascript:void(0)">登录遇到问题？</a>
+				</div>
+			</div>
 
 			<div class="mui-content-padded" style="margin-top: 20px;">
 				<button type="button" id="loginBtn" class="mui-btn mui-btn-danger mui-btn-block">登录</button>
@@ -81,6 +81,7 @@
 			var getCodeBtn = document.getElementById('getCodeBtn');
 			var loginBtn = document.getElementById('loginBtn');
 			var agreementDetail = document.getElementById("agreementDetail");
+			var agreementCBox = document.getElementById("agreementCBox");
 
 			getCodeBtn.addEventListener('tap', function() {
 				codeNum.value = '';
@@ -101,6 +102,11 @@
 					return;
 				}
 
+				if(agreementCBox.checked == false) {
+					mui.toast("请确认您是否同意《用户协议》");
+					return;
+				}
+
 				requestLogin();
 			}, false);
 
@@ -109,10 +115,10 @@
 					url: 'http://feng-edu.com/agreement.html',
 					id: Math.random() + "",
 					styles: { // 窗口参数 参考5+规范中的WebviewStyle,也就是说WebviewStyle下的参数都可以在此设置
-						backButtonAutoControl:"close",
+						backButtonAutoControl: "close",
 						aniShow: 'slide-in-bottom',
 						titleNView: { // 窗口的标题栏控件
-							autoBackButton:true,
+							autoBackButton: true,
 							titleText: "用户协议", // 标题栏文字,当不设置此属性时，默认加载当前页面的标题，并自动更新页面的标题
 							titleColor: "#000000", // 字体颜色,颜色值格式为"#RRGGBB",默认值为"#000000"
 							titleSize: "17px", // 字体大小,默认17px
@@ -128,6 +134,9 @@
 						}
 					}
 				});
+
+				// 点击用户协议不应改变选择状态，采用这种形式进行还原
+				agreementCBox.checked = !agreementCBox.checked
 			})
 
 			function checkInput() {
@@ -203,8 +212,10 @@
 				// 1是新用户，0是已注册用户
 				if(resp.respObj == '0') {
 					document.getElementById("proDiv").style.display = "none"
+					agreementCBox.checked = true; // 简化判断
 				} else {
 					document.getElementById("proDiv").style.display = "inline-block"
+					agreementCBox.checked = false; // 根据一般，用户协议默认为不同意
 				}
 			}
 
