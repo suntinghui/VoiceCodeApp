@@ -30,14 +30,17 @@
 				</div>
 			</div>
 
-			<div style="color: #9B9B9B; padding: 10px; font-size:.9rem;">
-				<div id="proDiv" class="mui-input-row mui-checkbox mui-left" style="display:none;">
-					<input name="proInput" value="agreement" type="checkbox">
-					<label style="width:100%; font-size: 14px; color: #666666;">登录则表示您同意并遵守<a id="agreementDetail">《用户协议》</a></label>
-				</div>
-
-				<a style=" float:right;" id="problem" href="javascript:void(0)">登录遇到问题？</a>
-			</div>
+			<div class="mui-row" style="height: 40px; line-height: 40px;">
+		        <div class="mui-col-xs-8">
+		        		<div class="mui-checkbox mui-left" >
+					  <label>登录则表示您同意并遵守<a href="javascript:void(0)"  id="agreementDetail">《用户协议》</a></label>
+					  <input name="checkbox1" value="Item 1" type="checkbox" style="top:6px;" checked>
+					</div>
+		        </div>
+		        <div class="mui-col-xs-4 mui-text-right">
+		        		<a id="problem" href="javascript:void(0)">登录遇到问题？</a>
+		        </div>
+		    </div>
 
 			<div class="mui-content-padded" style="margin-top: 20px;">
 				<button type="button" id="loginBtn" class="mui-btn mui-btn-danger mui-btn-block">登录</button>
