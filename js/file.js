@@ -152,7 +152,7 @@ function unzipCourseZip(id, success, failure) {
 		deleteZipFile(id);
 
 	}, function(e) {
-		console.log('解压失败 ' + id + '  ' + e.message);
+		console.log('解压失败 ' + id + '  ' + e.message + " " + zipfile +" "+target);
 
 		if(typeof failure == 'function') {
 			failure(e);

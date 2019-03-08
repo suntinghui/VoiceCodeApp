@@ -131,6 +131,12 @@
 					for(var i = 0; i < downloadedList.length; i++) {
 						var courseId = downloadedList[i];
 						var course = JSON.parse(storageGetItem('COURSE' + courseId));
+						
+						if (course == null) {
+							mui.toast('查询课程出现错误，请稍候重试');
+							hideProgressDialog();
+							break;
+						}
 
 						if(course.languageType != languageType)
 							continue;
@@ -219,6 +225,12 @@
 
 					for(var j = 0; j < allList.length; j++) {
 						var newCourse = allList[j];
+						
+						if (oldCourse == null || newCourse == null) {
+							mui.toast('查询课程出现错误，请稍候重试');
+							hideProgressDialog();
+							break;
+						}
 
 						if(oldCourse.id == newCourse.id) {
 							// 如果图片的版本号或是zip的版本号不同，则删该课程，需要用户去重新下载

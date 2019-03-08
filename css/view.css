@@ -1,3 +1,5 @@
+* { touch-action: none; }
+
 html,body {height: 100%;}
 
 .spec-font, .mui-title {font-family: "微软雅黑" !important;}
