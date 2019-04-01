@@ -17,8 +17,8 @@ var FIR_APP_ID = '5a263a38959d6941ae00070f';
 var FIR_API_TOKEN = 'b466e4ea1d74d418b79837f4fd6302a8';
 var FIR_CHECK_URL = 'http://api.fir.im/apps/latest/' + FIR_APP_ID + '?api_token=' + FIR_API_TOKEN;
 
-var FIR_LINK_Android = 'http://fir.im/vlub';
-var FIR_LINK_IOS = "http://fir.im/5exn";
+var FIR_LINK_Android = 'https://fir.im/vlub';
+var FIR_LINK_IOS = "https://fir.im/5exn";
 
 var READ_INTERVAL = 2200; // 朗读单词频率
 
